@@ -26,27 +26,27 @@ except NameError:
     config = ConfigParser.ConfigParser()
     config.readfp(open(os.path.join(".", "sparks.cfg")))
    
-SCREEN_WIDTH = int(config.get("graphics","screen_width"))
-SCREEN_HEIGHT = int(config.get("graphics","screen_height"))
-
-USE_ANTIALIAS = int(config.get("graphics","antialias"))
-
-
-DRAW_WIDTH = int(config.get("graphics","draw_width"))
-
-#maximum number of bulls (basic enemies) on the screen. decrease this if the game runs too slowly
-MAX_BULL = int(config.get("graphics","max_sprites"))
-PRECOMPUTE_SPRITES = int(config.get("graphics","precompute_sprites"))
-DO_NOT_PRECOMPUTE_BIG_SPRITES = int(config.get("graphics","do_not_precompute_big_sprites"))
-MAX_FPS = int(config.get("graphics","max_fps"))
-
-
-#joystick ID. should be set to 1 to use secondary joystick. should be changed to be configurable
-JOYSTICK_ID = int(config.get("control","joystick_id"))#0
-JOY_FIRE = int(config.get("control","joy_fire"))#2
-JOY_ESCAPE = int(config.get("control","joy_escape"))#8
-JOY_PAUSE = int(config.get("control","joy_pause"))#9
-JOY_BACK = int(config.get("control","joy_menu_back"))
+    SCREEN_WIDTH = int(config.get("graphics","screen_width"))
+    SCREEN_HEIGHT = int(config.get("graphics","screen_height"))
+    
+    USE_ANTIALIAS = int(config.get("graphics","antialias"))
+    
+    
+    DRAW_WIDTH = int(config.get("graphics","draw_width"))
+    
+    #maximum number of bulls (basic enemies) on the screen. decrease this if the game runs too slowly
+    MAX_BULL = int(config.get("graphics","max_sprites"))
+    PRECOMPUTE_SPRITES = int(config.get("graphics","precompute_sprites"))
+    DO_NOT_PRECOMPUTE_BIG_SPRITES = int(config.get("graphics","do_not_precompute_big_sprites"))
+    MAX_FPS = int(config.get("graphics","max_fps"))
+    
+    
+    #joystick ID. should be set to 1 to use secondary joystick. should be changed to be configurable
+    JOYSTICK_ID = int(config.get("control","joystick_id"))#0
+    JOY_FIRE = int(config.get("control","joy_fire"))#2
+    JOY_ESCAPE = int(config.get("control","joy_escape"))#8
+    JOY_PAUSE = int(config.get("control","joy_pause"))#9
+    JOY_BACK = int(config.get("control","joy_menu_back"))
 
 
 #END OF CONFIGURATION CONSTANTS
