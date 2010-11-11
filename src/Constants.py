@@ -27,7 +27,7 @@ except NameError:
     config = ConfigParser.ConfigParser()
     
     if len(sys.argv)==1:
-        config_file = "sparks.cfg"
+        config_file = "sparks-pc.cfg"
     else:
         config_file = sys.argv[1]
     config.readfp(open(os.path.join(".", config_file)))
