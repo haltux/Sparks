@@ -281,9 +281,9 @@ class Ship(Sprite):
         Sprite.update(self)
 
 
-
-        joyX1 = int(getJoyAxis(0)*256)*self.speed
-        joyY1 = int(getJoyAxis(1)*256)*self.speed
+ 
+        joyX1 = int(getDirJoyXAxis()*256)*self.speed
+        joyY1 = int(getDirJoyYAxis()*256)*self.speed
         self.vx = joyX1
         self.vy = joyY1
         
@@ -297,8 +297,8 @@ class Ship(Sprite):
                 pass#Particle((self.sx+random.randint(-1000,1000),self.sy+random.randint(-1000,1000)),(-self.vx/8+random.randint(0,disp*2)-disp,-self.vy/8+random.randint(0,disp*2)-disp))
 
 
-        joyX2 = int(getJoyAxis(2)*256)
-        joyY2 = int(getJoyAxis(3)*256)
+        joyX2 = int(getFireJoyXAxis()*256)
+        joyY2 = int(getFireJoyYAxis()*256)
         if abs(joyX2)+abs(joyY2)>120:
             self.is_shooting=True
             if self.timer - self.timer_previous_shot>=self.shot_delay:

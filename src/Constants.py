@@ -18,13 +18,19 @@
 
 import ConfigParser
 import os
+import sys
 
 global config
 try:
     config
 except NameError:
     config = ConfigParser.ConfigParser()
-    config.readfp(open(os.path.join(".", "sparks.cfg")))
+    
+    if len(sys.argv)==1:
+        config_file = "sparks.cfg"
+    else:
+        config_file = sys.argv[1]
+    config.readfp(open(os.path.join(".", config_file)))
    
     SCREEN_WIDTH = int(config.get("graphics","screen_width"))
     SCREEN_HEIGHT = int(config.get("graphics","screen_height"))
@@ -42,12 +48,21 @@ except NameError:
     
     
     #joystick ID. should be set to 1 to use secondary joystick. should be changed to be configurable
-    JOYSTICK_ID = int(config.get("control","joystick_id"))#0
+    JOY_ID_BUTTONS = int(config.get("control","joystick_id_buttons"))#0
     JOY_FIRE = int(config.get("control","joy_fire"))#2
     JOY_ESCAPE = int(config.get("control","joy_escape"))#8
     JOY_PAUSE = int(config.get("control","joy_pause"))#9
     JOY_BACK = int(config.get("control","joy_menu_back"))
+    
+    JOY_ID_DIR = int(config.get("control","joy_id_dir"))
+    JOY_ID_FIRE = int(config.get("control","joy_id_fire"))    
 
+    JOY_DIR_X = int(config.get("control","joy_dir_x"))
+    JOY_DIR_Y = int(config.get("control","joy_dir_y"))
+    JOY_FIRE_X = int(config.get("control","joy_fire_x"))
+    JOY_FIRE_Y = int(config.get("control","joy_fire_y"))    
+        
+    
 
 #END OF CONFIGURATION CONSTANTS
 

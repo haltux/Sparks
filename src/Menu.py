@@ -115,7 +115,7 @@ class Menu(object):
                 self.options[self.option].command()
                     
         time = pygame.time.get_ticks()
-        axis_value=getJoyAxis(1)
+        axis_value=getDirJoyYAxis()
         if abs(axis_value)>0.4 and (self.axis_reset or (time-self.timer_first_move>300 and time-self.timer_last_move>100)):
             self.timer_last_move=time
             if self.axis_reset:

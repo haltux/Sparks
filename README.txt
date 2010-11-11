@@ -6,10 +6,9 @@ Based on some code from PyMike.
 
 Installation
 
-This game requires a double analogic joypad
+Install Python (2.6), Pygame, edit sparks.cfg and set buttons according to your joypad; then run sparks.py.
 
-Please edit sparks.cfg and set buttons according to your joypad. 
-Under windows, consult Control Panel / Devices / Joysticks in order to get joystick button numbers.
+This game requires a double analogic joypad
 
 --
 
