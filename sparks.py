@@ -17,11 +17,6 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os
-
-import sys
-sys.path.insert(1, "src")
-
-import Main
+import Sparks.Main
 if __name__ == "__main__":
-    Main.Run()
+    Sparks.Main.Run()

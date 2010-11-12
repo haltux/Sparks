@@ -1,0 +1,6 @@
+include Sparks/*.py
+recursive-include Sparks/data
+include README.txt
+include *.sh
+include *.py
+include *.cfg

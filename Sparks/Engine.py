@@ -27,7 +27,7 @@ import Game
 
 
 def load_font(file, size):
-    return pygame.font.Font(os.path.join("data", "fonts", file), size)
+    return pygame.font.Font(os.path.join(os.path.dirname(__file__), "data", "fonts", file), size)
 
 def render_text(surface, text, font, pos, center=False):
     ren = font.render(text, 1, (255, 255, 255))

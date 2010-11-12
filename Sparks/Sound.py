@@ -21,7 +21,7 @@ import os
 
 sounds = {}
 def load_sound(file, volume=1.0):
-    sound = pygame.mixer.Sound(os.path.join("data", "sounds", file))
+    sound = pygame.mixer.Sound(os.path.join(os.path.dirname(__file__), "data", "sounds", file))
     sound.set_volume(volume)
     return sound
 
