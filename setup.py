@@ -3,12 +3,12 @@
 from distutils.core import setup
 
 setup(
-	name = 'Sparks',
-	version = '0.1',
-	description = 'A vectorial shooter',
-	author = 'Haltux',
-	url = 'https://github.com/haltux',
-	packages = ['Sparks'],
-	package_data = {'Sparks': ['data/fonts/*', 'cfg/*']},
-	scripts = ['sparks_pandora.sh', 'sparks.py'],
+    name = 'Sparks',
+    version = '0.1',
+    description = 'A vectorial shooter',
+    author = 'Haltux',
+    url = 'https://github.com/haltux',
+    packages = ['Sparks'],
+    package_data = {'Sparks': ['data/fonts/*', 'cfg/*']},
+    scripts = ['sparks_pandora.sh', 'sparks.py'],
 )
