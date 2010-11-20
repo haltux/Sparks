@@ -41,6 +41,7 @@ def Run():
         os.environ["SDL_VIDEO_CENTERED"] = "1"
     pygame.display.set_caption("Sparks")
     screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT),pygame.FULLSCREEN)
+    pygame.mouse.set_visible(0)
     game = MainMenu(screen)
     game.Run()
 
