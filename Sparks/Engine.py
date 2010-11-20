@@ -122,7 +122,10 @@ def LifeImage(surface, pos):
         newX = int(p[0]*math.cos(math.radians(180))*0.6 - p[1]*math.sin(math.radians(180))*0.6 + pos[0])
         newY = int(p[0]*math.sin(math.radians(180))*0.6 + p[1]*math.cos(math.radians(180))*0.6 + pos[1])
         points.append((newX,newY))
-    pygame.draw.aalines(surface,(255,255,255),1,points,1)
+    if Game.USE_ANTIALIAS:
+        pygame.draw.aalines(surface,(255,255,255),1,points,DRAW_WIDTH)
+    else:
+        pygame.draw.lines(surface,(255,255,255),1,points,DRAW_WIDTH)
 
 
 class Group(pygame.sprite.RenderPlain):
