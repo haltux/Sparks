@@ -19,53 +19,82 @@
 import ConfigParser
 import os
 import sys
+import shutil
 
-global config
-try:
-    config
-except NameError:
-    config = ConfigParser.ConfigParser()
+
+VERSION = 2
+
+config_parser = ConfigParser.ConfigParser()
+config_file =  os.path.join(os.path.expanduser("~"),".sparks") 
+
+file_exists = False
+create_config_file = False
+
+
+if os.path.exists(config_file):
+    file_exists = True
+    try:
+        config_parser.readfp(open(config_file))
+        if int(config_parser.get("version","number"))!=VERSION:
+            create_config_file = True
+    except:
+        create_config_file = True
+else:
+    create_config_file=True
     
+if create_config_file:
+    if file_exists:
+        shutil.copyfile(config_file,config_file+".old")
+    original_config_file=""
     if len(sys.argv)==1:
-        config_file = os.path.join(os.path.dirname(__file__), "cfg", "sparks-pc.cfg")
+        original_config_file = os.path.join(os.path.dirname(__file__), "cfg", "sparks-pc.cfg")
     else:
-        config_file = sys.argv[1]
-    config.readfp(open(os.path.join(".", config_file)))
-   
-    SCREEN_WIDTH = int(config.get("graphics","screen_width"))
-    SCREEN_HEIGHT = int(config.get("graphics","screen_height"))
-    
-    USE_ANTIALIAS = int(config.get("graphics","antialias"))
-    
-    
-    DRAW_WIDTH = int(config.get("graphics","draw_width"))
-    
-    #maximum number of bulls (basic enemies) on the screen. decrease this if the game runs too slowly
-    MAX_BULL = int(config.get("graphics","max_sprites"))
-    PRECOMPUTE_SPRITES = int(config.get("graphics","precompute_sprites"))
-    DO_NOT_PRECOMPUTE_BIG_SPRITES = int(config.get("graphics","do_not_precompute_big_sprites"))
-    MAX_FPS = int(config.get("graphics","max_fps"))
-    
-    
-    #joystick ID. should be set to 1 to use secondary joystick. should be changed to be configurable
-    JOY_ID_BUTTONS = int(config.get("control","joystick_id_buttons"))#0
-    JOY_FIRE = int(config.get("control","joy_fire"))#2
-    JOY_ESCAPE = int(config.get("control","joy_escape"))#8
-    JOY_PAUSE = int(config.get("control","joy_pause"))#9
-    JOY_BACK = int(config.get("control","joy_menu_back"))
-    
-    JOY_ID_DIR = int(config.get("control","joy_id_dir"))
-    JOY_ID_FIRE = int(config.get("control","joy_id_fire"))    
+        original_config_file = sys.argv[1]
+    shutil.copyfile(original_config_file,config_file)
 
-    JOY_DIR_X = int(config.get("control","joy_dir_x"))
-    JOY_DIR_Y = int(config.get("control","joy_dir_y"))
-    JOY_FIRE_X = int(config.get("control","joy_fire_x"))
-    JOY_FIRE_Y = int(config.get("control","joy_fire_y"))    
+config_parser.readfp(open(config_file))
+     
+
+
+SCREEN_WIDTH = int(config_parser.get("graphics","screen_width"))
+SCREEN_HEIGHT = int(config_parser.get("graphics","screen_height"))
+COLOR_DEPTH = int(config_parser.get("graphics","color_depth"))
+FULLSCREEN = int(config_parser.get("graphics","fullscreen"))
+USE_ANTIALIAS = int(config_parser.get("graphics","antialias"))
+
+
+
+
+DRAW_WIDTH = int(config_parser.get("graphics","draw_width"))
+
+#maximum number of bulls (basic enemies) on the screen. decrease this if the game runs too slowly
+MAX_BULL = int(config_parser.get("graphics","max_sprites"))
+PRECOMPUTE_SPRITES = int(config_parser.get("graphics","precompute_sprites"))
+DO_NOT_PRECOMPUTE_BIG_SPRITES = int(config_parser.get("graphics","do_not_precompute_big_sprites"))
+MAX_FPS = int(config_parser.get("graphics","max_fps"))
+
+
+#joystick ID. should be set to 1 to use secondary joystick. should be changed to be configurable
+JOY_ID_BUTTONS = int(config_parser.get("control","joystick_id_buttons"))#0
+JOY_FIRE = int(config_parser.get("control","joy_fire"))#2
+JOY_ESCAPE = int(config_parser.get("control","joy_escape"))#8
+JOY_PAUSE = int(config_parser.get("control","joy_pause"))#9
+JOY_BACK = int(config_parser.get("control","joy_menu_back"))
+JOY_FPS = int(config_parser.get("control","joy_fps"))
+
+JOY_ID_DIR = int(config_parser.get("control","joy_id_dir"))
+JOY_ID_FIRE = int(config_parser.get("control","joy_id_fire"))    
+
+JOY_DIR_X = int(config_parser.get("control","joy_dir_x"))
+JOY_DIR_Y = int(config_parser.get("control","joy_dir_y"))
+JOY_FIRE_X = int(config_parser.get("control","joy_fire_x"))
+JOY_FIRE_Y = int(config_parser.get("control","joy_fire_y"))    
+       
         
-    
 
 #END OF CONFIGURATION CONSTANTS
 
+GLOBAL_SPEED=60
 
 #changing these constants will change the size of each objects on the screen, therefore it will change the gameplay and the difficulty
 WORLD_WIDTH = 800*256
@@ -73,7 +102,7 @@ WORLD_HEIGHT = WORLD_WIDTH * SCREEN_HEIGHT / SCREEN_WIDTH
 SPRITE_SCALE = SCREEN_WIDTH/800.0
 
 
-APPEARANCE_DELAY = 100
+APPEARANCE_DELAY = 1500
 
 
 
@@ -84,7 +113,7 @@ ASTEROID2_POINTS   = ((-13, -30), (-30, -16), (-21, -3), (-30, 11), (-13, 30), (
 ASTEROID3_POINTS   = ((-14, -30), (-30, -16), (-30, 14), (-13, 30), (10, 30), (30, 10), (22, -2), (30, -15), (16, -30), (0, -13))
 ASTEROID4_POINTS   = ((-15, -30), (-5, -15), (-30, -15), (-30, 6), (-15, 30), (7, 20), (15, 30), (30, 12), (8, 0), (30, -8), (30, -15), (0, -30))
 UFO_POINTS = ((-7, -20), (-12, -7), (-30, 5), (-11, 19), (11, 19), (30, 5), (12, -7), (7, -20), (-7, -20), (-12, -7), (12, -7), (30, 5), (-30, 5))
-SHOT_POINTS = ((0, 0), (10, 0))
+SHOT_POINTS = ((0, 0), (20, 0))
 BULL_POINTS = ((-10,-10),(0,-6),(10,-10),(6,0),(10,10),(0,6),(-10,10),(-6,0),(-10,-10))
 COWARD_POINTS = ((-10,-10),(10,-10),(0,0),(10,10),(-10,10),(-10,-10))
 BERZERKER_POINTS = ((-10,-10),(10,-10),(-10,10),(10,10),(-10,-10))
@@ -92,3 +121,7 @@ MISSILE_POINTS = ((-5,-1),(5,0),(-5,1),(-5,-1))
 CORNERKEEPER_POINTS = ((-3,0),(0,-3),(3,0),(0,3))
 
 BIG_SPRITE_THRESHOLD = 40
+
+LEVEL_STEP_LENGTH = 100
+
+

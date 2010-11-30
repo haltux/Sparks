@@ -26,23 +26,39 @@ import sys, os
 import math, random
 
 import pygame
-from pygame.locals import *
+import pygame.locals 
 
-from Game import *
-from Menu import *
-from Constants import *
+import Game
+import Menu 
+import Control
+
 
 import cProfile
 
+import Constants
+
+import Colors
+
 def Run():
     pygame.init()  
-    initialize_joystick()
+    Control.initialize_joystick()
     if sys.platform in ["win32", "win64"]:
         os.environ["SDL_VIDEO_CENTERED"] = "1"
     pygame.display.set_caption("Sparks")
-    screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT),pygame.FULLSCREEN)
+    
+    mode_flag=0
+    if Constants.FULLSCREEN:
+        mode_flag = pygame.FULLSCREEN
+    
+    if (Constants.COLOR_DEPTH>0):
+        screen = pygame.display.set_mode((Constants.SCREEN_WIDTH,Constants.SCREEN_HEIGHT),mode_flag,Constants.COLOR_DEPTH)
+    else:
+        screen = pygame.display.set_mode((Constants.SCREEN_WIDTH,Constants.SCREEN_HEIGHT),mode_flag)
+
+    Colors.init_colors()
+
     pygame.mouse.set_visible(0)
-    game = MainMenu(screen)
+    game = Menu.MainMenu(screen)
     game.Run()
 
 Run()

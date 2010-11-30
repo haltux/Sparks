@@ -85,7 +85,6 @@ class Level(object):
         return self.date>max(self.events.keys())
 
     def process(self,game):
-
         if self.date in self.wait_points:
             conditions=self.wait_points[self.date]
             if len(game.bulls)>conditions[0] or len(game.destroyables)-len(game.bulls)>conditions[1]:
@@ -200,12 +199,12 @@ class LevelArcade1(Level):
         
         self._add_corner_keepers()
         
-        sm = SublevelManager(self,1000)
+        sm = SublevelManager(self,100)
     
-        interval=70-self.difficulty*5
+        interval=20-self.difficulty*2
     
         for i in range(0,2):
-            self._add_pattern_sequence(range(sm.start,sm.end,interval),[i*2+3],[(Bull,(Bull.BASIC,))],[(random_pattern,())])
+            self._add_pattern_sequence(range(sm.start,sm.end,interval),[5],[(Bull,(Bull.BASIC,100+diff*20,))],[(random_pattern,())])
             sm.next()
             
 class LevelArcade2(Level):
@@ -213,16 +212,16 @@ class LevelArcade2(Level):
     def __init__(self,diff):
         Level.__init__(self,diff)
         
-        sm = SublevelManager(self,1000)
+        sm = SublevelManager(self,100)
 
-        interval=70-self.difficulty*5
+        interval=20-self.difficulty*2
     
         for i in range(0,3):
-            self._add_pattern_sequence(range(sm.start,sm.end,interval),[3],[Bull],[(random_pattern,())])
-            self._add_pattern_sequence(range(sm.start,sm.end,interval*2),[i+1],[(Bull,(Bull.BERZERKER,))],[(random_pattern,())])            
+            self._add_pattern_sequence(range(sm.start,sm.end,interval),[3],[(Bull,(Bull.BASIC,100+diff*20,))],[(random_pattern,())])
+            self._add_pattern_sequence(range(sm.start,sm.end,interval*2),[2],[(Bull,(Bull.BERZERKER,100+diff*20,))],[(random_pattern,())])            
             sm.next()
             
-        self._add_pattern_sequence(range(sm.start,sm.end,300),[5+self.difficulty*2],[(Bull,(Bull.BERZERKER,))],\
+        self._add_pattern_sequence(range(sm.start,sm.end,30),[5+self.difficulty*2],[(Bull,(Bull.BERZERKER,100+diff*20,))],\
                                    [(rectangle_pattern,(WORLD_WIDTH/20,WORLD_HEIGHT/20,WORLD_WIDTH/20*19,WORLD_HEIGHT/20*19))])                    
         sm.next()             
 
@@ -231,16 +230,16 @@ class LevelArcade3(Level):
     def __init__(self,diff):
         Level.__init__(self,diff)
         
-        sm = SublevelManager(self,1000)
+        sm = SublevelManager(self,100)
 
-        interval=70-self.difficulty*5
+        interval=20-self.difficulty*2
     
         for i in range(0,3):
-            self._add_pattern_sequence(range(sm.start,sm.end,interval),[3],[Bull],[(random_pattern,())])
-            self._add_pattern_sequence(range(sm.start,sm.end,interval),[i+1],[Turner],[(random_pattern,())])            
+            self._add_pattern_sequence(range(sm.start,sm.end,interval),[3],[(Bull,(Bull.BASIC,100+diff*20,))],[(random_pattern,())])
+            self._add_pattern_sequence(range(sm.start,sm.end,interval),[2],[(Turner,(100+diff*20,))],[(random_pattern,())])            
             sm.next()
             
-        self._add_pattern_sequence(range(sm.start,sm.end,300),[8+self.difficulty*3],[Turner],\
+        self._add_pattern_sequence(range(sm.start,sm.end,30),[8+self.difficulty*3],[(Turner,(100+diff*20,))],\
                                    [(rectangle_pattern,(WORLD_WIDTH/20,WORLD_HEIGHT/20,WORLD_WIDTH/20*19,WORLD_HEIGHT/20*19))])               
         sm.next()             
 
@@ -249,22 +248,16 @@ class LevelArcade4(Level):
     def __init__(self,diff):
         Level.__init__(self,diff)
         
-        sm = SublevelManager(self,1000)
+        sm = SublevelManager(self,100)
 
-        interval=70-self.difficulty*5
-    
-        for i in range(0,3):
-            self._add_pattern_sequence(range(sm.start,sm.end,interval),[3],[Bull],[(random_pattern,())])
-            self._add_pattern_sequence(range(sm.start,sm.end,interval*2),[i+2],[Turner],[(random_pattern,())])  
-            self._add_pattern_sequence(range(sm.start,sm.end,interval*4),[i+2],[(Bull,(Bull.BERZERKER,))],[(random_pattern,())])                       
-            sm.next()
+        interval=20
             
         
-        self._add_pattern_sequence(range(sm.start,sm.end,interval),[3],[Bull],[(random_pattern,())])  
-        self._add_pattern_sequence(range(sm.start,sm.end,300),[1+self.difficulty/3],[MissileLauncher],[(random_pattern,())])                        
+        self._add_pattern_sequence(range(sm.start,sm.end,interval),[3],[(Bull,(Bull.BASIC,100+diff*20,))],[(random_pattern,())])
+        self._add_pattern_sequence(range(sm.start,sm.end,100/(self.difficulty+2)),[1],[MissileLauncher],[(random_pattern,())])                        
         sm.next()             
 
-        self._add_pattern_sequence(range(sm.start,sm.end,300),[3+self.difficulty],[MissileLauncher],\
+        self._add_pattern_sequence([sm.start+20],[3+self.difficulty],[MissileLauncher],\
                                   [(rectangle_pattern,(WORLD_WIDTH/20,WORLD_HEIGHT/20,WORLD_WIDTH/20*19,WORLD_HEIGHT/20*19))])                          
         sm.next()             
 
@@ -274,46 +267,28 @@ class LevelBullRectangles(Level):
     name = "Bulls Rectangles"
     def __init__(self,diff):
         Level.__init__(self,diff)
-        self._add_pattern_sequence(range(1,1000,200),[20+self.difficulty*4],[Bull],[(rectangle_pattern,(0,0,WORLD_WIDTH,WORLD_HEIGHT))])
-        
-class LevelRandomBulls(Level):
-    name = "Random Bulls"
-    def __init__(self,diff):
-        Level.__init__(self,diff)
-        self._add_corner_keepers()        
-        self._add_pattern_sequence(range(1,1000,33),[min(self.difficulty+1,5)],[Bull],[(random_pattern,())])
-        if self.difficulty>5:
-            self._add_pattern_sequence(range(1,1000,100/(self.difficulty-5)),[1],[(Bull,(Bull.BERZERKER,))],[(random_pattern,())])
-
-class LevelRandomBulls2(Level):
-    name = "Random Bulls 2"
-    def __init__(self,diff):
-        Level.__init__(self,diff)
-        self._add_corner_keepers()        
-        self._add_pattern_sequence(range(1,1000,100),[min(self.difficulty*3+3,15)],[Bull],[(random_pattern,())])
-        if self.difficulty>5:
-            self._add_pattern_sequence(range(1,1000,100/(self.difficulty-5)),[1],[(Bull,(Bull.BERZERKER,))],[(random_pattern,())])
-
+        self._add_pattern_sequence(range(1,200,40-self.difficulty*4),[15],[(Bull,(Bull.BASIC,100+diff*20,))],[(rectangle_pattern,(0,0,WORLD_WIDTH,WORLD_HEIGHT))])
+  
 class LevelCowards(Level):
     name = "Cowards"
     def __init__(self,diff):
         Level.__init__(self,diff)
         self._add_corner_keepers()        
-        self._add_pattern_sequence(range(1,1000,200),[10+self.difficulty*2],[Coward],[(random_pattern,())])
+        self._add_pattern_sequence(range(1,200,40-self.difficulty*4),[10],[Coward],[(random_pattern,())])
 
 class LevelTurners(Level):
     name = "Turners"
     def __init__(self,diff):
         Level.__init__(self,diff)
         self._add_corner_keepers()
-        self._add_pattern_sequence(range(1,1000,200),[5+self.difficulty],[Turner],[(random_pattern,())])
+        self._add_pattern_sequence(range(1,200,40-self.difficulty*4),[5],[(Turner,(100+diff*20,))],[(random_pattern,())])
 
 class LevelBerzerkers(Level):
     name = "Berzerkers"
     def __init__(self,diff):
         Level.__init__(self,diff)
         self._add_corner_keepers()        
-        self._add_pattern_sequence(range(1,1000,200),[5+self.difficulty],[(Bull,(Bull.BERZERKER,))],[(random_pattern,())])
+        self._add_pattern_sequence(range(1,200,40-self.difficulty*4),[5],[(Bull,(Bull.BERZERKER,100+diff*20,))],[(random_pattern,())])
 
 class LevelMissileLaunchers(Level):
     name = "MissileLaunchers"
@@ -324,44 +299,47 @@ class LevelMissileLaunchers(Level):
 #        self._add_pattern_sequence(range(1,1000,200-10*self.difficulty),[0],[1+self.difficulty/2],[Coward],[random_pattern])
 
 
-class LevelMiners(Level):
-    name = "Miners"
-    def __init__(self,diff):  
-        Level.__init__(self,diff) 
-        self._add_corner_keepers()
-        self._add_pattern_sequence(range(1,1000,50),[min(self.difficulty+1,5)],[Bull],[(random_pattern,())])   
-        self._add_pattern_sequence(range(1,1000,300),[min(self.difficulty/2+1,5)],[Miner],[(random_pattern,())])   
-
 class LevelAsteroids(Level):
     name = "Asteroids"
     def __init__(self,diff):  
         Level.__init__(self,diff) 
         self._add_corner_keepers() 
-        self._add_pattern_sequence(range(1,1000,50),[min(self.difficulty+1,5)],[Bull],[(random_pattern,())])          
-        self._add_pattern_sequence(range(1,1000,300),[self.difficulty/3+1],[Asteroid],[(random_pattern,())])   
+        self._add_pattern_sequence(range(1,200,40-self.difficulty*4),[5],[(Bull,(Bull.BASIC,100+diff*20,))],[(random_pattern,())])          
+        self._add_pattern_sequence(range(1,200,100-self.difficulty*20),[1],[Asteroid],[(random_pattern,())])   
 
 class LevelMines(Level):
     name = "Mines"
     def __init__(self,diff):
         Level.__init__(self,diff)
-        self._add_corner_keepers()        
-        self._add_pattern_sequence(range(1,1000,33),[min(self.difficulty+1,5)],[Mine],[(uniform_random_pattern,())])
+        self._add_corner_keepers()   
+        self._add_pattern_sequence(range(1,200,40-self.difficulty*4),[5],[(Bull,(Bull.BASIC,100+diff*20,))],[(random_pattern,())])              
+        self._add_pattern_sequence(range(1,200,40-self.difficulty*4),[2],[Mine],[(uniform_random_pattern,())])
 
 
 
-class LevelTest(Level):
-    name = "Test"
-    
+class LevelTest1(Level):
+    name = "Test 1 enemy"
     def __init__(self,diff):
         Level.__init__(self,diff)
-        self._add_corner_keepers()
-        self._add_pattern_sequence([1000],[1],[Bull],[(rectangle_pattern,(WORLD_WIDTH/10,WORLD_HEIGHT/10,WORLD_WIDTH*9/10,WORLD_HEIGHT*9/10))])
+        self._add_pattern_sequence([1],[1],[Bull],[(random_pattern,())])
+        
+class LevelTest10(Level):
+    name = "Test 10 enemies"
+    def __init__(self,diff):
+        Level.__init__(self,diff)
+        self._add_pattern_sequence([1],[10],[Bull],[(random_pattern,())])       
+
+class LevelTest30(Level):
+    name = "Test 30 enemies"
+    def __init__(self,diff):
+        Level.__init__(self,diff)
+        self._add_pattern_sequence([1],[30],[Bull],[(random_pattern,())])       
 
 LEVEL_MAIN_SEQUENCE=[LevelArcade1,LevelArcade2,LevelArcade3,LevelArcade4]
 
-CUSTOM_LEVELS=[LevelBullRectangles,LevelRandomBulls,LevelRandomBulls2,LevelCowards,LevelTurners,LevelBerzerkers,LevelMissileLaunchers,LevelMiners,LevelMines,LevelAsteroids,LevelArcade1,LevelArcade2,LevelArcade3,LevelArcade4,LevelTest]
+CUSTOM_LEVELS=[LevelBullRectangles,LevelCowards,LevelTurners,LevelBerzerkers,LevelMissileLaunchers,LevelMines,LevelAsteroids,LevelArcade1,LevelArcade2,LevelArcade3,LevelArcade4,LevelTest1,LevelTest10,LevelTest30]
 
 def get_next_level(num_level,diff):
     level=LEVEL_MAIN_SEQUENCE[num_level%len(LEVEL_MAIN_SEQUENCE)]
-    level_diff=num_level/len(LEVEL_MAIN_SEQUENCE)*3
+    level_diff=num_level/len(LEVEL_MAIN_SEQUENCE)
     return level(diff+level_diff)

@@ -27,6 +27,7 @@ from Engine import *
 from GameObjects import *
 import Game
 import levels
+import Colors
 
 NB_OPTIONS_DISPLAYED = 7
 
@@ -51,9 +52,9 @@ class MenuOption:
 
     def render(self, screen,num_line,nb_line):      
         if self.selected:
-            ren = self.font.render(self.text, 1, (255, 255, 255))
+            ren = self.font.render(self.text, (Colors.COLOR_DEPTH>8), (255,255,255))
         else:
-            ren = self.font.render(self.text, 1, (175, 175, 175))
+            ren = self.font.render(self.text, (Colors.COLOR_DEPTH>8), (175,175,175))
         pos = (SCREEN_WIDTH/2-ren.get_width()/2, SCREEN_HEIGHT/4*3 + (-nb_line/2+num_line)*self.font.get_height())            
         screen.blit(ren, pos)
 

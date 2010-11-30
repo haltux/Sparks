@@ -21,6 +21,7 @@ import sys, os
 import math, random
 
 import pygame
+
 from pygame.locals import *
 
 from Engine import *
@@ -29,6 +30,10 @@ from Constants import *
 from Sound import *
 
 from Control import *
+
+import Colors
+
+import Timer
 
 ANGLE_PRECISION = 8
 FADE_PRECISION = 8
@@ -40,21 +45,25 @@ class Sprite(pygame.sprite.Sprite):
     __map_pcrects={}
     __map_pcwidth={}
 
-    def __init__(self,pos, points, scale=1,color=(255,255,255)):
+    def __init__(self,pos, points, scale=1,color=Colors.COLOR_WHITE):
         
         pygame.sprite.Sprite.__init__(self)
         self.__points = points
         self.__scale = SPRITE_SCALE*scale
         self.color = color
-        self.alpha = 255
+        self.light = 255
         (self.sx,self.sy) = pos
+        (self.x,self.y)= (screen_reduction(self.sx),screen_reduction(self.sy))
+        (self.old_x,self.old_y) = (self.x,self.y)
+        (self.old2_x,self.old2_y) = (self.x,self.y)
+        
         self.angle=0
         
         
         for group in [self.containers]:
             self.add(group)
 
-        self.timer = 0
+        self.timer = Timer.Timer()
         self.last_call_compute_drawpoints = -1
         self.vx = 0
         self.vy = 0
@@ -80,7 +89,7 @@ class Sprite(pygame.sprite.Sprite):
         self.__precompute_images()
 
     def turn(self,angle):
-        self.angle=self.angle+angle
+        self.angle=self.angle+angle *   GLOBAL_SPEED * Timer.get_frame_time() / 1000
 
     def get_scale(self):
         return self.__scale
@@ -98,13 +107,13 @@ class Sprite(pygame.sprite.Sprite):
         return self.__images[(int(self.angle)%360)/ANGLE_PRECISION]
 
     def compute_drawpoints(self):
-        if self.timer>self.last_call_compute_drawpoints:
+        if self.timer.get_timer()>self.last_call_compute_drawpoints:
             self.drawpoints=[]
             for p in self.__points:
-                newX = int(p[0]*math.cos(math.radians(self.angle))*self.get_scale() - p[1]*math.sin(math.radians(self.angle))*self.get_scale())+screen_reduction(self.sx)
-                newY = int(p[0]*math.sin(math.radians(self.angle))*self.get_scale() + p[1]*math.cos(math.radians(self.angle))*self.get_scale())+screen_reduction(self.sy)
+                newX = int(p[0]*math.cos(math.radians(self.angle))*self.get_scale() - p[1]*math.sin(math.radians(self.angle))*self.get_scale())+self.x
+                newY = int(p[0]*math.sin(math.radians(self.angle))*self.get_scale() + p[1]*math.cos(math.radians(self.angle))*self.get_scale())+self.y
                 self.drawpoints.append((newX,newY))
-            self.last_call_compute_drawpoints=self.timer
+            self.last_call_compute_drawpoints=self.timer.get_timer()
             
 
 
@@ -141,12 +150,15 @@ class Sprite(pygame.sprite.Sprite):
                 self.__pcdrawpoints.append(rdrawpoints)
 
                 if Game.USE_ANTIALIAS:
-                    pygame.draw.aalines(image,self.color,1,rdrawpoints,DRAW_WIDTH)
+                    pygame.draw.aalines(image,Colors.get_color_def(self.color),1,rdrawpoints,DRAW_WIDTH)
                 else:
-                    pygame.draw.lines(image,self.color,1,rdrawpoints,DRAW_WIDTH)
+                    pygame.draw.lines(image,Colors.get_color_def(self.color),1,rdrawpoints,DRAW_WIDTH)
                     
-                image.set_colorkey((0,0,0))
+                print(self.color)
+                    
+                image.set_colorkey(Colors.COLOR_BLACK)
                 self.__images.append(image)
+
                 
             Sprite.__map_pcimages[h] = self.__images
             Sprite.__map_pcwidth[h] = self.width
@@ -179,12 +191,14 @@ class Sprite(pygame.sprite.Sprite):
 
     def draw(self, surface):
         self.adrawpoints=[]
+        xc=self.x-self.width/2
+        yc=self.y-self.width/2
         for (x,y) in self.__get_precomputed_drawpoints(self.angle):
-            self.adrawpoints.append((screen_reduction(self.sx)-self.width/2+x,screen_reduction(self.sy)-self.width/2+y))
+            self.adrawpoints.append((xc+x,yc+y))
         if Game.USE_ANTIALIAS:
-            pygame.draw.aalines(surface,self.get_alpha_color(),1,self.adrawpoints,DRAW_WIDTH)
-        else:
-            pygame.draw.lines(surface,self.get_alpha_color(),1,self.adrawpoints,DRAW_WIDTH)
+            pygame.draw.aalines(surface,Colors.generate_shade(self.color, self.light),1,self.adrawpoints,DRAW_WIDTH)
+        else: 
+            pygame.draw.lines(surface,Colors.generate_shade(self.color, self.light),1,self.adrawpoints,DRAW_WIDTH)
 
 
 
@@ -192,7 +206,7 @@ class Sprite(pygame.sprite.Sprite):
 #        pass
 #        current_rrect = self.__get_precomputed_rect(self.angle)
 #        self.rect = Rect(screen_reduction(current_rrect[0]+self.sx),screen_reduction(current_rrect[1]+self.sy),screen_reduction(current_rrect[2]),screen_reduction(current_rrect[3]))
-        self.rect = Rect(screen_reduction(self.sx)-self.width/2,screen_reduction(self.sy)-self.width/2,self.width,self.width)
+        self.rect = Rect(self.x-self.width/2,self.y-self.width/2,self.width,self.width)
     def __update_drawpoints(self):
 #        self.adrawpoints=[]
 #        for (x,y) in self.__get_precomputed_drawpoints(self.angle):
@@ -201,10 +215,17 @@ class Sprite(pygame.sprite.Sprite):
 
     def update(self):
         if not self.isBlocked():
-            self.sx += self.vx
-            self.sy += self.vy
+            self.sx += self.vx *   GLOBAL_SPEED * Timer.get_frame_time() / 1000
+            self.sy += self.vy *   GLOBAL_SPEED * Timer.get_frame_time() / 1000
 
-        self.timer += 1
+        self.old2_x = self.old_x
+        self.old2_y = self.old_y
+
+        self.old_x = self.x
+        self.old_y = self.y
+
+        self.x = screen_reduction(self.sx)
+        self.y = screen_reduction(self.sy)
 
         self._checkLimits()
         self.__update_rect()
@@ -239,13 +260,6 @@ class Sprite(pygame.sprite.Sprite):
     def get_color(self):
         return self.color
 
-    def get_alpha_color(self):
-        if self.alpha==255:
-            return self.color
-        else:
-            r,g,b = self.color
-            return (r*self.alpha/256,g*self.alpha/256,b*self.alpha/256)
-
     def isBlocked(self):
         return False
     
@@ -260,10 +274,10 @@ class Ship(Sprite):
 
     def __init__(self):
 
-        Sprite.__init__(self, pos=(WORLD_WIDTH/2, WORLD_HEIGHT/2),points=SHIP_ACCEL_POINTS,color=(255,255,255))
+        Sprite.__init__(self, pos=(WORLD_WIDTH/2, WORLD_HEIGHT/2),points=SHIP_ACCEL_POINTS,color=Colors.COLOR_WHITE)
         self.vx = 0
         self.vy = 0
-        self.shot_delay = 10
+        self.shot_delay = 200
         self.timer_previous_shot = 0
         self.speed = 3
         self.shooting_angle =0
@@ -275,7 +289,7 @@ class Ship(Sprite):
 
 
     def is_invincible(self):
-        return self.timer<100
+        return self.timer.get_timer()<1500
 
     def update(self):
         Sprite.update(self)
@@ -301,8 +315,8 @@ class Ship(Sprite):
         joyY2 = int(getFireJoyYAxis()*256)
         if abs(joyX2)+abs(joyY2)>120:
             self.is_shooting=True
-            if self.timer - self.timer_previous_shot>=self.shot_delay:
-                self.timer_previous_shot = self.timer
+            if self.timer.get_timer() - self.timer_previous_shot>=self.shot_delay:
+                self.timer_previous_shot = self.timer.get_timer()
                 play_shoot()
                 self.shooting_angle  = angle_to_target((0,0),(joyX2,joyY2))
 
@@ -316,7 +330,7 @@ class Ship(Sprite):
     def kill(self):
         pygame.sprite.Sprite.kill(self)
         for i in range(100):
-            Particle((self.sx,self.sy),life=64)
+            Particle((self.sx,self.sy),life_length=1000)
             
 
 
@@ -325,11 +339,11 @@ class Shot(Sprite):
     def __init__(self, pos, angle):
         Sprite.__init__(self,pos,SHOT_POINTS)
 
-        self.color = (255,255,255) 
+        self.color = Colors.COLOR_WHITE
 
-        self.speed = 2048
+        self.speed = 4000
         self.nose_distance = 2048
-        self.life = 50
+        self.life = 1000
         
         self.angle = angle
         self.direction = angle
@@ -341,7 +355,7 @@ class Shot(Sprite):
     def update(self):
         Sprite.update(self)
 
-        self.life -= 1
+        self.life -= Timer.get_frame_time()
         if self.life <= 0:
             pygame.sprite.Sprite.kill(self)
 
@@ -360,36 +374,36 @@ class Shot(Sprite):
 class EnemyShot(Shot):
     def __init__(self,pos,angle):
         Shot.__init__(self, pos, angle)
-        self.speed = 768
-        self.life = 20
+        self.speed = 800
+        self.life = 200
 
 
 class PlayerShot(Shot):
     def __init__(self,pos,angle):
         Shot.__init__(self, pos, angle)
-        self.speed = 2048
-        self.life = 50
+        self.speed = 3000
+        self.life = 300
         
 
 
 
 class Enemy(Sprite):
 
-    def __init__(self,pos,points,scale=1,color=(0,255,255),appearance_delay=APPEARANCE_DELAY):
+    def __init__(self,pos,points,scale=1,color=Colors.COLOR_LIGHT_BLUE,appearance_delay=APPEARANCE_DELAY):
         Sprite.__init__(self,pos,points,scale,color)
         self.hitpoints=1
         self.color = color      
         self.appearance_delay=appearance_delay
-        self.alpha = 0
+        self.light = 0
         self.reward = 1
 
 
     def update(self):
         Sprite.update(self)
-        if self.timer < self.appearance_delay:
-            self.alpha = self.timer*255/self.appearance_delay
+        if self.timer.get_timer() < self.appearance_delay:
+            self.light = self.timer.get_timer()*255/self.appearance_delay
         else:
-            self.alpha = 255
+            self.light = 255
 #            self.image = self.stored_image
 #        else:
 #            self.image=self.ghost_image
@@ -409,7 +423,7 @@ class Enemy(Sprite):
             Particle((self.sx,self.sy))
 
     def isActive(self):
-        return (self.timer >= self.appearance_delay)
+        return (self.timer.get_timer() >= self.appearance_delay)
     
     def isBlocked(self):
         return not self.isActive()
@@ -420,14 +434,14 @@ class Enemy(Sprite):
 
 class Mine(Enemy):
     def __init__(self,pos):
-        Enemy.__init__(self,pos,BULL_POINTS,scale=0.3,color=(255,0,0))
+        Enemy.__init__(self,pos,BULL_POINTS,scale=0.3,color=Colors.COLOR_LIGHT_RED)
         self.vx=0
         self.vy=0
         self.reward = 100
         
     def update(self):
         Enemy.update(self)
-        if self.timer>300:
+        if self.timer.get_timer()>5000:
             self.explode()
         
     def explode(self):
@@ -483,26 +497,29 @@ class Asteroid(Enemy):
                     Particle((self.sx,self.sy))
 
 class DirectionalEnemy(Enemy):
-    def __init__(self,pos,points,scale=1,color=(0,255,255),update_speed=False,appearance_delay=APPEARANCE_DELAY):
+    def __init__(self,pos,points,scale=1,color=Colors.COLOR_LIGHT_BLUE,update_speed=False,appearance_delay=APPEARANCE_DELAY):
         Enemy.__init__(self,pos,points,scale,color,appearance_delay)
 
-        self.refresh_time=17
+        self.refresh_time=251
         
         self.speed = 1
         self.target_speed = 1        
-        self.rotation_speed=5
-        self.acceleration=10
+        self.rotation_speed=75
+        self.acceleration=150
         self.target_direction = 0
         self.direction = 0
 
         self.update_speed = update_speed
         self.stopped = False
+        
+        self.refreshing_timer=Timer.Timer()
 
     def update(self):
         Enemy.update(self)
-        self.direction = angle_approach(self.direction,self.target_direction,self.rotation_speed)
+        self.direction = angle_approach(self.direction,self.target_direction,self.rotation_speed*   GLOBAL_SPEED * Timer.get_frame_time() / 1000)
+        
         if self.update_speed:
-            self.speed = approach(self.speed,self.target_speed,self.acceleration)
+            self.speed = approach(self.speed,self.target_speed,self.acceleration *   GLOBAL_SPEED * Timer.get_frame_time() / 1000)
 
         if self.stopped==True:
             self.vx = 0
@@ -511,8 +528,9 @@ class DirectionalEnemy(Enemy):
             self.vx = int(math.cos(math.radians(self.direction))*self.speed)
             self.vy = int(math.sin(math.radians(self.direction))*self.speed)
 
-        if self.timer%self.refresh_time==1:
+        if self.refreshing_timer.get_timer()>self.refresh_time:
             self.update_target()
+            self.refreshing_timer.reset_timer()
 
 
     def _bounce_x(self):
@@ -532,7 +550,7 @@ class DirectionalEnemy(Enemy):
 
 class PathFollowerEnemy(DirectionalEnemy):
     def __init__(self,pos,path,random_target=False):
-        DirectionalEnemy.__init__(self,pos,BULL_POINTS,color=(255,255,0))
+        DirectionalEnemy.__init__(self,pos,BULL_POINTS,color=Colors.COLOR_YELLOW)
         self.path=path
         
         self.random_target = random_target
@@ -559,11 +577,13 @@ class Miner(PathFollowerEnemy):
         PathFollowerEnemy.__init__(self,pos,path,random_target=True)
         self.speed=400
         self.reward = 200
+        self.mining_timer=Timer.Timer()
         
     def update(self):
         PathFollowerEnemy.update(self)
-        if self.timer%50==0:
+        if self.mining_timer.get_timer()>1000:
             Mine((self.sx,self.sy))
+            self.mining_timer.reset_timer()
         
 
 class BullType:
@@ -574,17 +594,17 @@ class BullType:
         self.color=color
 
 class Bull(DirectionalEnemy):
-    BASIC=BullType("basic",300,5,(128,255,255))
-    BERZERKER=BullType("berzerker",1000,1,(255,128,128))
+    BASIC=BullType("basic",400,75,Colors.COLOR_LIGHT_BLUE)
+    BERZERKER=BullType("berzerker",1000,8,Colors.COLOR_LIGHT_RED)
 
     
-    def __init__(self,pos,bulltype=BASIC):
+    def __init__(self,pos,bulltype=BASIC,speed_factor=100):
         DirectionalEnemy.__init__(self,pos,BULL_POINTS,color=bulltype.color,update_speed=False)
 
-        self.bulltype= bulltype
-
-        self.speed = bulltype.speed
-        self.rotation_speed = bulltype.rotation_speed
+        self.bulltype = bulltype
+        self.speed_factor = speed_factor 
+        self.speed = bulltype.speed * speed_factor/100 
+        self.rotation_speed = bulltype.rotation_speed * speed_factor/100 
 
         self.type = bulltype.name
         
@@ -599,8 +619,8 @@ class Bull(DirectionalEnemy):
     def change_type(self,bulltype):
         self.bulltype= bulltype
 
-        self.speed = bulltype.speed
-        self.rotation_speed = bulltype.rotation_speed
+        self.speed = bulltype.speed  * self.speed_factor/100 
+        self.rotation_speed = bulltype.rotation_speed * self.speed_factor/100 
         
         self.change_color(bulltype.color)
         
@@ -612,7 +632,7 @@ class Bull(DirectionalEnemy):
 
     def update(self):
         DirectionalEnemy.update(self)
-        self.angle=self.angle+3
+        self.angle=self.angle + 3.0  *   GLOBAL_SPEED * Timer.get_frame_time() / 1000
         if self.is_merging:
             if self.distance(self.partner)<self.speed+self.partner.speed or not self.partner.alive():
                 self.hitpoints+=self.partner.hitpoints
@@ -642,7 +662,7 @@ class Bull(DirectionalEnemy):
 class CornerKeeper(DirectionalEnemy):
     
     def __init__(self,pos,((sx1,sy1),(sx2,sy2))):
-        DirectionalEnemy.__init__(self,pos,CORNERKEEPER_POINTS,color=(255,255,255),update_speed=True)
+        DirectionalEnemy.__init__(self,pos,CORNERKEEPER_POINTS,color=Colors.COLOR_WHITE,update_speed=True)
 
         self.attack_speed = 150
         self.retreat_speed = 100 
@@ -682,14 +702,15 @@ class CornerKeeper(DirectionalEnemy):
         
 class MissileLauncher(DirectionalEnemy):
     def __init__(self,pos):
-        DirectionalEnemy.__init__(self,pos,COWARD_POINTS,color=(255,255,128),update_speed=False) 
+        DirectionalEnemy.__init__(self,pos,COWARD_POINTS,color=Colors.COLOR_LIGHT_YELLOW,update_speed=False) 
         self.speed = 0
-        self.rotation_speed=3
-        self.reload_time=50
+        self.rotation_speed=50
+        self.reload_time=750
 
         self.last_shoot_time=0
         
         self.reward = 400
+        self.shooting_timer=Timer.Timer()
 
 
     def update_target(self):
@@ -698,14 +719,14 @@ class MissileLauncher(DirectionalEnemy):
     def update(self):
         DirectionalEnemy.update(self)
         self.angle=self.direction
-        if self.timer-self.last_shoot_time>self.reload_time:
+        if self.shooting_timer.get_timer()>self.reload_time:
             if angle_diff(self.target_direction,self.direction)<5:
                 Missile((self.sx,self.sy),self.direction)
-                self.last_shoot_time = self.timer
-
+                self.shooting_timer.reset_timer()
+                
 class Missile(DirectionalEnemy):
     def __init__(self,pos,angle):
-        DirectionalEnemy.__init__(self,pos,MISSILE_POINTS,color=(255,255,128),update_speed=False,appearance_delay=0)
+        DirectionalEnemy.__init__(self,pos,MISSILE_POINTS,color=Colors.COLOR_LIGHT_YELLOW,update_speed=False,appearance_delay=0)
 
         self.angle = angle
         self.direction = angle
@@ -721,7 +742,7 @@ class Missile(DirectionalEnemy):
     def update(self):
         DirectionalEnemy.update(self)
         for i in range(0,3):
-            Particle((self.sx+random.randint(-500,500),self.sy+random.randint(-500,500)),(-self.vx/8+random.randint(-2,2),-self.vy/8+random.randint(-2,2)),life=8)
+            Particle((self.sx+random.randint(-500,500),self.sy+random.randint(-500,500)),(-self.vx/8+random.randint(-2,2),-self.vy/8+random.randint(-2,2)),life=120)
         self.angle=self.direction
 
     def _bounce_x(self):
@@ -748,12 +769,12 @@ class Missile(DirectionalEnemy):
 
 
 class Turner(Enemy):
-    def __init__(self,pos):
-        Enemy.__init__(self,pos,BULL_POINTS,color=(255,128,128))
-        self.speed = 1000
-        self.speed_trans = 400
-        self.rotation_speed = 4
-        self.refresh_time=17
+    def __init__(self,pos,speed_factor=100):
+        Enemy.__init__(self,pos,BULL_POINTS,color=Colors.COLOR_LIGHT_RED)
+        self.speed = 1000 * speed_factor / 100
+        self.speed_trans = 400 * speed_factor / 100
+        self.rotation_speed = 5  * speed_factor / 100 * GLOBAL_SPEED * Timer.get_frame_time() / 1000
+        self.refresh_time=251
         self.direction = 0
 
         
@@ -761,20 +782,22 @@ class Turner(Enemy):
         self.vy_trans=0
         
         self.reward = 50
+        self.refreshing_timer= Timer.Timer()
 
     def update(self):
         Enemy.update(self)
         self.direction += self.rotation_speed
-        self.angle=self.angle+5
+        self.angle=self.angle+5  *   GLOBAL_SPEED * Timer.get_frame_time() / 1000
 
 
         self.vx = int(math.cos(math.radians(self.direction))*self.speed)+self.vx_trans
         self.vy = int(math.sin(math.radians(self.direction))*self.speed)+self.vy_trans
 
-        if self.timer%self.refresh_time==1:
+        if self.refreshing_timer.get_timer()>self.refresh_time:
             att = angle_to_target((self.sx,self.sy), (Game.Game().ship.sx,Game.Game().ship.sy))
             self.vx_trans = int(math.cos(math.radians(att))*self.speed_trans)
             self.vy_trans = int(math.sin(math.radians(att))*self.speed_trans)
+            self.refreshing_timer.reset_timer()
             
 
 
@@ -787,7 +810,7 @@ class Turner(Enemy):
 
 class Coward(DirectionalEnemy):
     def __init__(self,pos):
-        DirectionalEnemy.__init__(self,pos,COWARD_POINTS,color = (0,255,128),update_speed=False)
+        DirectionalEnemy.__init__(self,pos,COWARD_POINTS,color = Colors.COLOR_GREEN,update_speed=False)
 
 
         self.standard_speed = 800.0
@@ -820,7 +843,7 @@ class Coward(DirectionalEnemy):
                     self.target_direction = closest_bullet.direction - 90 #angle_to_target((closest_bullet.sx,closest_bullet.sy),(self.sx,self.sy))
 
 class Particle(pygame.sprite.Sprite):
-    def __init__(self, (sx,sy),direction=None,life=32):
+    def __init__(self, (sx,sy),direction=None,life_length=500):
         pygame.sprite.Sprite.__init__(self,self.containers)
 
         if direction==None:
@@ -846,11 +869,12 @@ class Particle(pygame.sprite.Sprite):
         self.sx_tail = self.sx
         self.sy_tail = self.sy
 
-        self.light = 255
+        self.remaining_life = 1.0
+        self.light=255
         
-        self.color=(255,255,128)
+        self.color=Colors.COLOR_LIGHT_YELLOW
         
-        self.life_step=256/life
+        self.life_step = float(Timer.get_frame_time()) / life_length
         
         self.image=pygame.surface.Surface((1,1))
         self.rect=Rect(0,0,1,1)
@@ -858,13 +882,15 @@ class Particle(pygame.sprite.Sprite):
     def update(self):
 #        Sprite.update(self)
 
-        self.sx += self.vx
-        self.sy += self.vy
+        self.sx += self.vx  * GLOBAL_SPEED * Timer.get_frame_time() / 1000
+        self.sy += self.vy  * GLOBAL_SPEED * Timer.get_frame_time() / 1000
+     
         
-        self.sx_tail += self.vx_tail
-        self.sy_tail += self.vy_tail
+        self.sx_tail += self.vx_tail * GLOBAL_SPEED * Timer.get_frame_time() / 1000
+        self.sy_tail += self.vy_tail * GLOBAL_SPEED * Timer.get_frame_time() / 1000
 
-        self.light -= self.life_step
+        self.remaining_life -= self.life_step
+        self.light =int(256*self.remaining_life)
         
         if self.light <= 50:
             self.kill()
@@ -879,17 +905,13 @@ class Particle(pygame.sprite.Sprite):
             self.kill()
 
     def get_color(self):
-        if self.light<64:
-            return (self.light*2,0,0)
-        elif self.light<128:
-            return ((self.light-64)*2+128,(self.light-64)*4,0)
-        else:
-            return (255,255,(self.light-128)*2) 
+        return Colors.explode_color(self.light)
+  
         
 
     def draw(self, surface):
         if Game.USE_ANTIALIAS:
-            pygame.draw.aaline(surface,self.get_color(),(screen_reduction(self.sx),screen_reduction(self.sy)),(screen_reduction(self.sx_tail),screen_reduction(self.sy_tail)),1)
+            pygame.draw.aaline(surface,self.get_color(),(screen_reduction(self.sx),screen_reduction(self.sy)),(screen_reduction(self.sx_tail),screen_reduction(self.sy_tail)),DRAW_WIDTH)
         else:
-            pygame.draw.line(surface,self.get_color(),(screen_reduction(self.sx),screen_reduction(self.sy)),(screen_reduction(self.sx_tail),screen_reduction(self.sy_tail)),1)            
+            pygame.draw.line(surface,self.get_color(),(screen_reduction(self.sx),screen_reduction(self.sy)),(screen_reduction(self.sx_tail),screen_reduction(self.sy_tail)),DRAW_WIDTH)            
 

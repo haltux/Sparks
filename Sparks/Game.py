@@ -24,13 +24,15 @@ import pygame
 from pygame.locals import *
 
 from Engine import *
-from GameObjects import *
+import GameObjects 
 from Menu import *
 from Sound import *
 from Collider import  *
 from Control import  *
 
 import levels
+import Timer
+import Constants
 
 
 
@@ -44,6 +46,10 @@ STATE_END_GAME = 5
 MODE_ARCADE = 0
 MODE_LEVEL = 1
 
+LEVEL_TIMER = 0
+STATE_TIMER = 1
+SATURATION_TIMER = 2
+
 
 class Game(object):
     instance = None
@@ -52,6 +58,7 @@ class Game(object):
             Game.instance = object.__new__(cls)
         return Game.instance
 
+        
 
     def initialize(self,screen,mode=MODE_ARCADE,diff=0,level=None):
         self.screen= screen
@@ -89,8 +96,11 @@ class Game(object):
 
         self.ship = Ship()
         self.paused = False
+        self.display_fps = False
 
-        self.clock = pygame.time.Clock()
+
+        self.timerManager=Timer.TimerManager()
+        self.time = pygame.time.get_ticks() 
         self.events = []
 
         self.num_level = 0
@@ -115,10 +125,21 @@ class Game(object):
         self.state=STATE_MAIN
 
         self.num_level = 0
-        self.__new_level(self.num_level)
+  
 
         self.text_end_game=[""]
         self.restart=False
+        
+
+                
+        self.timerManager.add_timer(LEVEL_TIMER)
+        self.timerManager.add_timer(STATE_TIMER)
+        self.timerManager.add_timer(SATURATION_TIMER)
+   
+        self.__previous_frame_timer_value=0     
+        
+        self.__new_level(self.num_level) 
+ 
 
     def clearSprites(self):
         for s in self.clearables:
@@ -140,6 +161,8 @@ class Game(object):
         render_text(self.screen, "Score: %06d" % self.score, self.font, (10, 10))
         render_text(self.screen, "High: %06d" % self.highscore, self.font, (SCREEN_WIDTH/2, 10),True)
         render_text(self.screen, "Level: %d" % self.num_level, self.font, (SCREEN_WIDTH-140, 10))
+        if (self.display_fps):
+            render_text(self.screen, "FPS: %d" % (1000/Timer.get_frame_time()), self.font, (SCREEN_WIDTH-140, 50))
         for i in range(self.lives):
             LifeImage(self.screen, (20 + i*20, 50))
         if self.state==STATE_END_GAME:
@@ -148,7 +171,7 @@ class Game(object):
             while i<len(self.text_end_game):
                 render_text(self.screen, self.text_end_game[i], self.font3, (SCREEN_WIDTH/2, SCREEN_HEIGHT/2+self.font3.get_height()*i), True)
                 i+=1
-        if self.state==STATE_MAIN and self.state_timer<50:
+        if self.state==STATE_MAIN and self.timerManager.get_timer(STATE_TIMER)<1000:
             render_text(self.screen, "Level "+str(self.num_level+1), self.font2, (SCREEN_WIDTH/2, SCREEN_HEIGHT/3), True)
         pygame.display.flip()
 
@@ -158,16 +181,17 @@ class Game(object):
             if e.type == QUIT:
                 pygame.quit()
                 sys.exit()
-            
             if (e.type == KEYDOWN and e.key == K_ESCAPE) or (e.type == JOYBUTTONDOWN and e.button==JOY_ESCAPE):
                 self.restart = False
                 self.done = True
-
             if (e.type == KEYDOWN and e.key == K_p) or (e.type == JOYBUTTONDOWN and e.button==JOY_PAUSE):
                 self.paused ^= 1
             if (e.type == KEYDOWN and e.key == K_SPACE) or (e.type == JOYBUTTONDOWN and e.button==JOY_FIRE):
                 if self.state==STATE_END_GAME:
-                    self.done = True                       
+                    self.done = True  
+            if (e.type == JOYBUTTONDOWN and e.button==JOY_FPS): 
+                self.display_fps = not self.display_fps
+                                
             if e.type == ACTIVEEVENT:
                 if (e.state == 2 and e.gain == 0) or (e.state == 6 and e.gain == 0):
                     self.paused = True
@@ -175,37 +199,36 @@ class Game(object):
                     self.paused = False
 
     def __updateGame(self):
-        self.state_timer+=1
-        self.level_timer+=1
         if self.state==STATE_MAIN:
             if not self.ship.alive():
-                self.state_timer=0
+                self.timerManager.reset_timer(STATE_TIMER)
                 self.state=STATE_DEATH
                 self.lives -= 1
 #            self.level.process(self.level_timer)
             if not self.level.is_finished():
-                self.level.process(self)
+                for i in range(self.__previous_frame_timer_value/LEVEL_STEP_LENGTH,self.timerManager.get_timer(LEVEL_TIMER)/LEVEL_STEP_LENGTH):
+                    self.level.process(self)
+                self.__previous_frame_timer_value=self.timerManager.get_timer(LEVEL_TIMER)
+
                 if len(self.bulls)>MAX_BULL:
-                    self.saturation_timer += 1
-                    if self.saturation_timer%10==0:
-                        oldest_bull = max(self.bulls,key=lambda b:b.timer+random.randint(0,200) if b.bulltype==Bull.BASIC else 0)
+                    if self.timerManager.get_timer(SATURATION_TIMER)>500:
+                        oldest_bull = max(self.bulls,key=lambda b:b.timer.get_timer()+random.randint(0,200) if b.bulltype==Bull.BASIC else 0)
                         oldest_bull.change_type(Bull.BERZERKER)
-                else:
-                    self.saturation_timer = 0
+                        self.timerManager.reset_timer(SATURATION_TIMER)
             else:
                 if not self.destroyables:
-                    self.state_timer=0
+                    self.timerManager.reset_timer(STATE_TIMER)
                     self.state=STATE_LEVEL_FINISHED
         elif self.state==STATE_LEVEL_FINISHED:
-            if self.state_timer>50:
+            if self.timerManager.get_timer(STATE_TIMER)>1000:
                 if self.mode==MODE_ARCADE:
                     self.num_level += 1
                     self.lives+=1
                     self.__new_level(self.num_level)
-                    self.state_timer=0
+                    self.timerManager.reset_timer(STATE_TIMER)
                     self.state=STATE_MAIN
                 else:
-                    self.state_timer=0
+                    self.timerManager.reset_timer(STATE_TIMER)
                     self.text_end_game=["Congratulations!"]
                     self.text_end_game+=["You finished level \"" + str(self.level.name)+"\""]
                     self.text_end_game+=["with difficulty " + str(self.difficulty+1)]
@@ -214,10 +237,10 @@ class Game(object):
                     self.state=STATE_END_GAME
 
         elif self.state==STATE_DEATH:
-            if self.state_timer>50:
+            if self.timerManager.get_timer(STATE_TIMER)>1000:
                 if self.lives>0:
                     self.ship = Ship()
-                    self.state_timer=0
+                    self.timerManager.reset_timer(STATE_TIMER)
                     self.state=STATE_MAIN
                 else:
                     if self.mode==MODE_ARCADE:
@@ -235,7 +258,8 @@ class Game(object):
             self.level=levels.get_next_level(num_level, self.difficulty)
         else:
             self.level=self.chosen_level
-        self.level_timer =0
+        self.timerManager.reset_timer(LEVEL_TIMER)
+        self.__previous_frame_timer_value=0
         self.ship.pos = [SCREEN_WIDTH/2, SCREEN_HEIGHT/2]
         self.ship.velocity = [0, 0]
 
@@ -252,7 +276,7 @@ class Game(object):
     def __mainLoop(self):
 
         while not self.done:
-            self.clock.tick(MAX_FPS)            
+            Timer.tick()        
             self.sprites.update()
             self.particles.update()
 
@@ -263,7 +287,7 @@ class Game(object):
             self.__updateGame()
             self.__drawScene()
             
-                
+
         
 
     def Run(self):

@@ -92,11 +92,37 @@ class Collider:
                     return True
         return False
 
+    def __Exact_Line_Collision(self,shot, sprite):
+        sprite.compute_drawpoints()
+
+        
+        sprite_lines = []
+
+        for n in xrange(len(sprite.drawpoints)):
+            sprite_lines.append([sprite.drawpoints[n - 1], sprite.drawpoints[n]])
+ 
+        for sprite_line in sprite_lines:
+            if self.__lineCollision([(shot.x,shot.y),(shot.old2_x,shot.old2_y)], sprite_line):
+                return True
+            
+        return False
+
+
     def __Collision(self,sprite1, sprite2):
 #        distance = math.sqrt((sprite1.pos[0] - sprite2.pos[0]) * (sprite1.pos[0] - sprite2.pos[0])\
 #            + (sprite1.pos[1] - sprite2.pos[1]) * (sprite1.pos[1] - sprite2.pos[1]))
         if pygame.sprite.collide_rect(sprite1,sprite2):
             return self.__Exact_Collision(sprite1, sprite2)
+        else:
+            return False
+
+    
+
+    def __ShotCollision(self,shot, sprite):
+#        distance = math.sqrt((sprite1.pos[0] - sprite2.pos[0]) * (sprite1.pos[0] - sprite2.pos[0])\
+#            + (sprite1.pos[1] - sprite2.pos[1]) * (sprite1.pos[1] - sprite2.pos[1]))
+        if generate_rect((shot.x,shot.y),(shot.old2_x,shot.old2_y)).colliderect(sprite):
+            return self.__Exact_Line_Collision(shot, sprite)
         else:
             return False
 
@@ -116,6 +142,21 @@ class Collider:
 
             return coords
 
+    def __computeShotCells(self, shot):
+      
+        x1 = int(math.floor(min(shot.x,shot.old2_x) / self.BIN_SIZE))
+        y1 = int(math.floor(min(shot.y,shot.old2_y)   / self.BIN_SIZE))
+        x2 = int(math.floor(max(shot.x,shot.old2_x)    / self.BIN_SIZE))
+        y2 = int(math.floor(max(shot.y,shot.old2_y)   / self.BIN_SIZE))
+
+        coords = []
+
+        for x in range(x1, x2 + 1):
+            for y in range(y1, y2 + 1):
+                coords.append((x, y))
+
+        return coords
+
     def __computeGrid(self, group):
             collisionGrid = {}
 
@@ -134,6 +175,15 @@ class Collider:
                     for s in grid[c]:
                         setElts.add(s)
             return setElts
+        
+    def __getCollisionShotGrid(self, shot, grid):
+            setElts = set()
+            cells = self.__computeShotCells(shot)
+            for c in cells:
+                if c in grid:
+                    for s in grid[c]:
+                        setElts.add(s)
+            return setElts        
 
     def __getCollisionGridGrid(self, grid1, grid2):
             setEltPairs = set()
@@ -153,8 +203,8 @@ class Collider:
             self.enemyGrid = self.__computeGrid(game.enemies)
 
             for shot in game.playershots:
-                for enemy in self.__getCollisionSpriteGrid(shot, self.enemyGrid):
-                    if self.__Collision(enemy, shot):
+                for enemy in self.__getCollisionShotGrid(shot, self.enemyGrid):
+                    if self.__ShotCollision(shot,enemy):
                         enemy.hit()
                         shot.kill()
                         play_boom()
