@@ -154,7 +154,6 @@ class Sprite(pygame.sprite.Sprite):
                 else:
                     pygame.draw.lines(image,Colors.get_color_def(self.color),1,rdrawpoints,DRAW_WIDTH)
                     
-                print(self.color)
                     
                 image.set_colorkey(Colors.COLOR_BLACK)
                 self.__images.append(image)
