@@ -18,7 +18,7 @@
 
 import sys, os
 import math, random
-
+import Colors 
 import pygame
 from pygame.locals import *
 
@@ -30,22 +30,25 @@ def load_font(file, size):
     return pygame.font.Font(os.path.join(os.path.dirname(__file__), "data", "fonts", file), size)
 
 def render_text(surface, text, font, pos, center=False):
-    ren = font.render(text, 1, (255, 255, 255))
+    ren = font.render(text, (Colors.COLOR_DEPTH>8), (255, 255, 255))
     pos = [pos[0] - ren.get_width()/2, pos[1] - ren.get_height()/2]
     surface.blit(ren, pos)
     return ren
 
 def load_highscore():
-    f = os.path.expanduser(os.path.join("~",".sparks"))
-    if os.path.exists(f):
-        hs = open(os.path.expanduser(os.path.join("~",".sparks")), "rU").read()
-        return int(hs)
-    else:
-        hs = open(os.path.expanduser(os.path.join("~",".sparks")), "w").write(str(0))
-        return 0
+    return 0
+#
+#    f = os.path.expanduser(os.path.join("~",".sparks"))
+#    if os.path.exists(f):
+#        hs = open(os.path.expanduser(os.path.join("~",".sparks")), "rU").read()
+#        return int(hs)
+#    else:
+#        hs = open(os.path.expanduser(os.path.join("~",".sparks")), "w").write(str(0))
+#        return 0
 
 def save_highscore(score):
-    open(os.path.expanduser(os.path.join("~",".sparks")), "w").write(str(score))
+    pass
+    #open(os.path.expanduser(os.path.join("~",".sparks")), "w").write(str(score))
 
 
 
@@ -102,6 +105,10 @@ def manhattan_distance((x1,y1),(x2,y2)):
 def screen_reduction(v):
     return v*SCREEN_WIDTH/WORLD_WIDTH
 
+def generate_rect((x1,y1),(x2,y2)):
+    return pygame.Rect(min(x1,x2),min(y1,y2),abs(x1-x2),abs(y1-y2))
+    
+
 stars = []
 for i in range(30):
     stars.append([random.randrange(SCREEN_WIDTH), random.randrange(SCREEN_HEIGHT)])
@@ -132,7 +139,7 @@ class Group(pygame.sprite.RenderPlain):
     def draw(self, surface):
         surface_blit = surface.blit
         for spr in self.sprites():
-            if spr.alpha<255 or not PRECOMPUTE_SPRITES or (DO_NOT_PRECOMPUTE_BIG_SPRITES and spr.width>BIG_SPRITE_THRESHOLD*SPRITE_SCALE):
+            if spr.light<255 or not PRECOMPUTE_SPRITES or (DO_NOT_PRECOMPUTE_BIG_SPRITES and spr.width>BIG_SPRITE_THRESHOLD*SPRITE_SCALE):
                 spr.draw(surface)
             else:
                 self.spritedict[spr] = surface_blit(spr.image, spr.rect)
@@ -142,7 +149,7 @@ class Group(pygame.sprite.RenderPlain):
         sprites = self.sprites()
         surface_blit = surface.blit
         for spr in sprites:
-            spr.image.set_alpha(spr.alpha)
+            spr.image.set_alpha(spr.light)
             self.spritedict[spr] = surface_blit(spr.image, spr.rect)
         self.lostsprites = []
 """
