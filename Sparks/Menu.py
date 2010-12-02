@@ -211,7 +211,7 @@ class CustomLevelMenu(Menu):
 
 class DifficultyMenu(Menu):
     def _define_menu_entries(self):
-        for i in range(1,15):
+        for i in range(1,5):
             self.AddOption(str(i), self.__set_difficulty_command(i))
         self.AddOption("back", self._escape)
         
