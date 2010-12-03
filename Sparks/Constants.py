@@ -25,35 +25,18 @@ import shutil
 VERSION = 2
 
 config_parser = ConfigParser.ConfigParser()
-config_file =  os.path.join(os.path.expanduser("~"),".sparks") 
 
-file_exists = False
-create_config_file = False
-
-
-if os.path.exists(config_file):
-    file_exists = True
-    try:
-        config_parser.readfp(open(config_file))
-        if int(config_parser.get("version","number"))!=VERSION:
-            create_config_file = True
-    except:
-        create_config_file = True
+if len(sys.argv)==1:
+    config_file = os.path.join(os.path.dirname(__file__), "cfg", "sparks-pc.cfg")
 else:
-    create_config_file=True
-    
-if create_config_file:
-    if file_exists:
-        shutil.copyfile(config_file,config_file+".old")
-    original_config_file=""
-    if len(sys.argv)==1:
-        original_config_file = os.path.join(os.path.dirname(__file__), "cfg", "sparks-pc.cfg")
-    else:
-        original_config_file = sys.argv[1]
-    shutil.copyfile(original_config_file,config_file)
+    config_file = sys.argv[1]
 
 config_parser.readfp(open(config_file))
-     
+
+if int(config_parser.get("version","number")) != VERSION:
+    print "Configuration file is an outdated version.  Moving it to {0}.old".format(config_file)
+    shutil.move(config_file, "{0}.old".format(config_file))
+    sys.exit(1)
 
 
 SCREEN_WIDTH = int(config_parser.get("graphics","screen_width"))

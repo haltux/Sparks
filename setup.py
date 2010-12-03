@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(
     name = 'Sparks',
-    version = '0.4.1',
+    version = '0.4.2',
     description = 'A vectorial shooter',
     author = 'Haltux',
     url = 'https://github.com/haltux',

@@ -4,7 +4,11 @@ NUB1=`cat /proc/pandora/nub1/mode`
 echo absolute >/proc/pandora/nub0/mode
 echo absolute >/proc/pandora/nub1/mode
 
-./sparks.py Sparks/cfg/sparks-pandora.cfg
+if [ ! -f sparks.cfg ]; then
+    cp Sparks/cfg/sparks-pandora.cfg sparks.cfg
+fi
+
+./sparks.py sparks.cfg
 
 echo $NUB0 >/proc/pandora/nub0/mode
 echo $NUB1 >/proc/pandora/nub1/mode
