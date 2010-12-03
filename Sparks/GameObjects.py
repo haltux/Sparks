@@ -136,7 +136,8 @@ class Sprite(pygame.sprite.Sprite):
             self.__pcrects=[]
             
             for angle in range(0,360,ANGLE_PRECISION):
-                image = pygame.surface.Surface(( self.width, self.width))
+                image = pygame.surface.Surface(( self.width, self.width),depth=COLOR_DEPTH)
+                image.set_palette(Colors.PALETTE)
                 rdrawpoints=[]               
                 for p in self.__points:
                     newX = int(p[0]*math.cos(math.radians(angle))*self.get_scale() - p[1]*math.sin(math.radians(angle))*self.get_scale())+radius
@@ -211,6 +212,7 @@ class Sprite(pygame.sprite.Sprite):
 #        for (x,y) in self.__get_precomputed_drawpoints(self.angle):
 #            self.adrawpoints.append((screen_reduction(self.sx+x),screen_reduction(self.sy+y)))
         self.image = self.__get_precomputed_image(self.angle)
+
 
     def update(self):
         if not self.isBlocked():
@@ -328,7 +330,7 @@ class Ship(Sprite):
 
     def kill(self):
         pygame.sprite.Sprite.kill(self)
-        for i in range(100):
+        for i in range(NB_PARTICLES_PER_EXPLOSION):
             Particle((self.sx,self.sy),life_length=1000)
             
 

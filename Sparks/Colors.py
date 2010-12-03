@@ -39,11 +39,14 @@ COLOR_DEF[COLOR_EXPLODE]=(0,0,0) #used only  in 8bits, to store index of shade v
 
 
 COLOR_DEPTH=0
+PALETTE=[]
 FIRST_EXPLODE_COLOR=0
 
 
 SHADE_LENGTH = 16
 SHADES_FIRST={}
+
+
 
 def explode_color_24bits(light):
     if light<64:
@@ -86,19 +89,20 @@ def get_color_def(color):
     
 def init_colors():
     global COLOR_DEPTH
+    global PALETTE
+
     COLOR_DEPTH = pygame.display.get_surface().get_bitsize()
     if (COLOR_DEPTH==8):  
-        palette = [COLOR_DEF[i] for i in range(0,LAST_COLOR)]
-        
+        PALETTE = [COLOR_DEF[i] for i in range(0,LAST_COLOR)]
+
 
         for i in [COLOR_EXPLODE] + range(0,LAST_COLOR+1):
-            SHADES_FIRST[i] = len(palette)
+            SHADES_FIRST[i] = len(PALETTE)
             if i==COLOR_EXPLODE:
-                palette += [explode_color_24bits(x*256/SHADE_LENGTH) for x in range(0,SHADE_LENGTH)]
+                PALETTE += [explode_color_24bits(x*256/SHADE_LENGTH) for x in range(0,SHADE_LENGTH)]
             else:
-                palette += [generate_shade_24bits(COLOR_DEF[i],x*256/SHADE_LENGTH) for x in range(0,SHADE_LENGTH)]
-                                         
-                  
-        pygame.display.get_surface().set_palette(palette)      
+                PALETTE += [generate_shade_24bits(COLOR_DEF[i],x*256/SHADE_LENGTH) for x in range(0,SHADE_LENGTH)]
+                          
+        pygame.display.get_surface().set_palette(PALETTE)      
     
     

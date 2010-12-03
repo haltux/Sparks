@@ -22,7 +22,7 @@ import sys
 import shutil
 
 
-VERSION = 2
+VERSION = 3
 
 config_parser = ConfigParser.ConfigParser()
 
@@ -44,6 +44,7 @@ SCREEN_HEIGHT = int(config_parser.get("graphics","screen_height"))
 COLOR_DEPTH = int(config_parser.get("graphics","color_depth"))
 FULLSCREEN = int(config_parser.get("graphics","fullscreen"))
 USE_ANTIALIAS = int(config_parser.get("graphics","antialias"))
+NB_PARTICLES_PER_EXPLOSION = int(config_parser.get("graphics","nb_particles_per_explosion"))
 
 
 
