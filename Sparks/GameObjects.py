@@ -330,7 +330,7 @@ class Ship(Sprite):
 
     def kill(self):
         pygame.sprite.Sprite.kill(self)
-        for i in range(NB_PARTICLES_PER_EXPLOSION):
+        for i in range(NB_PARTICLES_PER_EXPLOSION*2):
             Particle((self.sx,self.sy),life_length=1000)
             
 
@@ -420,7 +420,7 @@ class Enemy(Sprite):
     def kill(self):
         Sprite.kill(self)
         Game.Game().score += self.get_reward()        
-        for i in range(20):
+        for i in range(NB_PARTICLES_PER_EXPLOSION):
             Particle((self.sx,self.sy))
 
     def isActive(self):
@@ -494,7 +494,7 @@ class Asteroid(Enemy):
                     Asteroid((self.sx+3000, self.sy+3000), direction=random.randrange(0, 90),size=1,appearance_delay=0)
                     Asteroid((self.sx-3000, self.sy+3000), direction=random.randrange(90, 180),size=1,appearance_delay=0)
             else:
-                for i in range(15):
+                for i in range(NB_PARTICLES_PER_EXPLOSION):
                     Particle((self.sx,self.sy))
 
 class DirectionalEnemy(Enemy):
@@ -743,7 +743,7 @@ class Missile(DirectionalEnemy):
     def update(self):
         DirectionalEnemy.update(self)
         for i in range(0,3):
-            Particle((self.sx+random.randint(-500,500),self.sy+random.randint(-500,500)),(-self.vx/8+random.randint(-2,2),-self.vy/8+random.randint(-2,2)),life=120)
+            Particle((self.sx+random.randint(-500,500),self.sy+random.randint(-500,500)),(-self.vx/8+random.randint(-2,2),-self.vy/8+random.randint(-2,2)),life_length=120)
         self.angle=self.direction
 
     def _bounce_x(self):
