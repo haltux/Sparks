@@ -181,15 +181,15 @@ class Game(object):
             if e.type == QUIT:
                 pygame.quit()
                 sys.exit()
-            if (e.type == KEYDOWN and e.key == K_ESCAPE) or (e.type == JOYBUTTONDOWN and e.button==JOY_ESCAPE):
+            if (e.type == KEYDOWN and e.key == K_ESCAPE) or (e.type == JOYBUTTONDOWN and e.button==JOY_ESCAPE) or (e.type == KEYDOWN and e.key == K_SYSREQ )or (e.type == KEYDOWN and e.key == K_q):
                 self.restart = False
                 self.done = True
-            if (e.type == KEYDOWN and e.key == K_p) or (e.type == JOYBUTTONDOWN and e.button==JOY_PAUSE):
+            if (e.type == KEYDOWN and e.key == K_p) or (e.type == JOYBUTTONDOWN and e.button==JOY_PAUSE) or (e.type == KEYDOWN and e.key == K_LALT):
                 self.paused ^= 1
-            if (e.type == KEYDOWN and e.key == K_SPACE) or (e.type == JOYBUTTONDOWN and e.button==JOY_FIRE):
+            if (e.type == KEYDOWN and e.key == K_SPACE) or (e.type == JOYBUTTONDOWN and e.button==JOY_FIRE) or (e.type == KEYDOWN and e.key == K_END):
                 if self.state==STATE_END_GAME:
                     self.done = True  
-            if (e.type == JOYBUTTONDOWN and e.button==JOY_FPS): 
+            if (e.type == JOYBUTTONDOWN and e.button==JOY_FPS) or (e.type == KEYDOWN and e.key == K_f): 
                 self.display_fps = not self.display_fps
                                 
             if e.type == ACTIVEEVENT:

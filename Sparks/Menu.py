@@ -106,13 +106,13 @@ class Menu(object):
             if e.type == QUIT:
                 pygame.quit()
                 sys.exit()
-            if (e.type == KEYDOWN and e.key == K_ESCAPE or e.type == JOYBUTTONDOWN and e.button==JOY_BACK):
+            if (e.type == KEYDOWN and e.key == K_ESCAPE or e.type == KEYDOWN and e.key == K_PAGEUP or e.type == KEYDOWN and e.key == K_SYSREQ or e.type == JOYBUTTONDOWN and e.button==JOY_BACK):
                 self._escape()
             if (e.type == KEYDOWN and e.key == K_UP):
                 self.__moveUp()
             if (e.type == KEYDOWN and e.key == K_DOWN):
                 self.__moveDown()
-            if (e.type == KEYDOWN and e.key == K_RETURN or e.type == JOYBUTTONDOWN and e.button==JOY_FIRE):
+            if (e.type == KEYDOWN and e.key == K_RETURN or e.type == KEYDOWN and e.key == K_END or e.type == KEYDOWN and e.key == K_RETURN or e.type == JOYBUTTONDOWN and e.button==JOY_FIRE):
                 self.options[self.option].command()
                     
         time = pygame.time.get_ticks()
@@ -184,7 +184,7 @@ class MainMenu(Menu):
         
     def start_game(self,diff):
         game = Game.Game()
-        game.initialize(self.screen,Game.MODE_ARCADE,diff-1)    
+        game.initialize(self.screen,Game.MODE_ARCADE,diff)    
         game.Run()
           
         
@@ -205,14 +205,15 @@ class CustomLevelMenu(Menu):
         replay=True
         while (replay):
             game = Game.Game()
-            game.initialize(self.screen,Game.MODE_LEVEL,diff-1,self.level(diff-1))
+            game.initialize(self.screen,Game.MODE_LEVEL,diff,self.level(diff))
             replay = game.Run()
                       
 
 class DifficultyMenu(Menu):
     def _define_menu_entries(self):
-        for i in range(1,5):
-            self.AddOption(str(i), self.__set_difficulty_command(i))
+        strDiffs=["Easy","Normal","Hard","Very hard"]
+        for i in range(0,4):
+            self.AddOption(strDiffs[i], self.__set_difficulty_command(i))
         self.AddOption("back", self._escape)
         
     def __set_difficulty_command(self,diff):
